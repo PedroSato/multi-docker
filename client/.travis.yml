@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t pedrosato/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true pedrosato/react-test npm test
+
+after_success:
+  - docker build -t pedrosato/multi-client ./client
+  - docker build -t pedrosato/multi-nginx ./nginx
+  - docker build -t pedrosato/multi-server ./server
+  - docker build -t pedrosato/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  - docker push pedrosato/multi-client
+  - docker push pedrosato/multi-nginx
+  - docker push pedrosato/multi-server
+  - docker push pedrosato/multi-worker
